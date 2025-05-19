@@ -1,6 +1,10 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { onAuthStateChanged, User } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import AuthForm from './components/AuthForm';
 import { fetchPokemonData, Pokemon } from './api/api';
 import Scoreboard from './components/Scoreboard';
 import CardGrid from './components/CardGrid';
@@ -12,7 +16,8 @@ const shuffle = <T,>(array: T[]): T[] => {
     .map((a) => a.value);
 };
 
-const Home: React.FC = () => {
+export default function Home() {
+  const [user, setUser] = useState<User | null>(null);
   const [cards, setCards] = useState<Pokemon[]>([]);
   const [clickedIds, setClickedIds] = useState<Set<number>>(new Set());
   const [score, setScore] = useState<number>(0);
@@ -24,12 +29,21 @@ const Home: React.FC = () => {
   });
 
   useEffect(() => {
-    async function loadData() {
-      const data = await fetchPokemonData();
-      setCards(shuffle(data));
-    }
-    loadData();
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
+    });
+    return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      async function loadData() {
+        const data = await fetchPokemonData();
+        setCards(shuffle(data));
+      }
+      loadData();
+    }
+  }, [user]);
 
   const handleCardClick = (id: number) => {
     if (clickedIds.has(id)) {
@@ -51,6 +65,10 @@ const Home: React.FC = () => {
     setCards((prev) => shuffle(prev));
   };
 
+  if (!user) {
+    return <AuthForm />;
+  }
+
   return (
     <main>
       <h1>Memory Card Game</h1>
@@ -58,6 +76,17 @@ const Home: React.FC = () => {
       <CardGrid cards={cards} onCardClick={handleCardClick} />
     </main>
   );
-};
+}
 
-export default Home;
+
+
+
+
+
+
+
+
+
+
+
+
