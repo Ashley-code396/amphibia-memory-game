@@ -78,16 +78,17 @@ function LoginPageContent() {
         if (typeof window === "undefined") return
 
         let salt = localStorage.getItem("zklogin_salt")
-        if (!salt) {
-          const array = new Uint8Array(16)
-          window.crypto.getRandomValues(array)
-          salt = Array.from(array)
-            .map((b) => b.toString(16).padStart(2, "0"))
-            .join("")
-          localStorage.setItem("zklogin_salt", salt)
-        }
+if (!salt) {
+  const array = new Uint8Array(16)
+  window.crypto.getRandomValues(array)
+  salt = Array.from(array)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("")
+  localStorage.setItem("zklogin_salt", salt)
+}
 
-        const address = jwtToAddress(token, salt)
+// Convert hex string to BigInt
+const address = jwtToAddress(token, BigInt('0x' + salt))
 
         localStorage.setItem("zklogin_jwt", token)
         localStorage.setItem("zklogin_address", address)
